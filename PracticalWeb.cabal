@@ -37,6 +37,13 @@ library
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
       base >=4.7 && <5
+    , classy-prelude
+    , hspec
+    , lens
+    , pcre-heavy
+    , pcre-light
+    , safe
+    , text
   default-language: Haskell2010
 
 executable PracticalWeb-exe
@@ -50,25 +57,39 @@ executable PracticalWeb-exe
   default-extensions:
       OverloadedStrings
       DuplicateRecordFields
+      QuasiQuotes
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       base >=4.7 && <5
     , classy-prelude
+    , hspec
+    , lens
     , pcre-heavy
+    , pcre-light
+    , safe
     , text
   default-language: Haskell2010
 
 test-suite PracticalWeb-test
   type: exitcode-stdio-1.0
-  main-is: Spec.hs
+  main-is: Main.hs
   other-modules:
       Paths_PracticalWeb
   autogen-modules:
       Paths_PracticalWeb
   hs-source-dirs:
       test
+  default-extensions:
+      QuasiQuotes
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       PracticalWeb
     , base >=4.7 && <5
+    , classy-prelude
+    , hspec
+    , lens
+    , pcre-heavy
+    , pcre-light
+    , safe
+    , text
   default-language: Haskell2010

@@ -21,6 +21,13 @@ description:         Please see the README on GitHub at <https://github.com/gith
 
 dependencies:
 - base >= 4.7 && < 5
+- text
+- classy-prelude
+- pcre-heavy 
+- lens
+- hspec
+- safe
+- pcre-light
 
 ghc-options:
 - -Wall
@@ -47,20 +54,17 @@ executables:
     default-extensions:
     - OverloadedStrings
     - DuplicateRecordFields
-    dependencies:
-    - PracticalWeb
-    dependencies:
-    - classy-prelude
-    - text
-    - pcre-heavy
+    - QuasiQuotes
 
 tests:
   PracticalWeb-test:
-    main:                Spec.hs
+    main:                Main.hs
     source-dirs:         test
     ghc-options:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
+    default-extensions:
+    - QuasiQuotes
     dependencies:
-    - PracticalWeb
+    - PracticalWeb   
