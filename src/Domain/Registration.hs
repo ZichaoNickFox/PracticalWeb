@@ -37,13 +37,19 @@ data PasswordValidationErr =
   PasswordValidationErrMustContainUpperCase |
   PasswordValidationErrMustContainLowerCase |
   PasswordValidationErrMustContainNumber 
+data EmailVerificationErr = EmailVerificationErrInvalidCode
 
 data RegistrationError = RegistrationErrorEmailToken deriving (Show, Eq)
 
 type VerificationCode = Text
 
+newtype UserId = UserId Int
+
 class Monad m => AuthRepo m where
   addAuth :: Auth -> m (Either RegistrationError VerificationCode)
+  setEmailAsVerified :: VerificationCode -> m (Either EmailVerificationErr ())
+  findUserByAuth :: Auth -> m (Maybe (UserId, Bool))
+  findEmailFromUserId :: UserId -> m (Maybe Email)
 
 class Monad m => EmailVerificationNotify m where
   notifyEmailVerification :: Email -> VerificationCode -> m ()
@@ -61,3 +67,6 @@ register :: (AuthRepo m, EmailVerificationNotify m, Control.Monad.IO.Class.Monad
 register auth = runExceptT $ do
   vCode <- ExceptT $ addAuth auth
   liftIO $ notifyEmailVerification (authEmail auth) vCode
+
+verifyEmail :: AuthRepo m => VerificationCode -> m (Either EmailVerificationErr ())
+verifyEmail = setEmailAsVerified
