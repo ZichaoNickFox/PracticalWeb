@@ -12,6 +12,7 @@ let
     p.pcre-light
     p.safe
     p.classy-prelude
+    p.mtl
   ]);
 in
 pkgs.mkShell {

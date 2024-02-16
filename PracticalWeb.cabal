@@ -25,7 +25,7 @@ source-repository head
 
 library
   exposed-modules:
-      Adapter.Email.Registration
+      Domain.Registration
       Domain.Validation
       Lib
   other-modules:
@@ -34,12 +34,16 @@ library
       Paths_PracticalWeb
   hs-source-dirs:
       src
+  default-extensions:
+      OverloadedStrings
+      QuasiQuotes
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints
   build-depends:
       base >=4.7 && <5
     , classy-prelude
     , hspec
     , lens
+    , mtl
     , pcre-heavy
     , pcre-light
     , safe
@@ -56,7 +60,6 @@ executable PracticalWeb-exe
       app
   default-extensions:
       OverloadedStrings
-      DuplicateRecordFields
       QuasiQuotes
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
@@ -64,6 +67,7 @@ executable PracticalWeb-exe
     , classy-prelude
     , hspec
     , lens
+    , mtl
     , pcre-heavy
     , pcre-light
     , safe
@@ -80,6 +84,7 @@ test-suite PracticalWeb-test
   hs-source-dirs:
       test
   default-extensions:
+      OverloadedStrings
       QuasiQuotes
   ghc-options: -Wall -Wcompat -Widentities -Wincomplete-record-updates -Wincomplete-uni-patterns -Wmissing-export-lists -Wmissing-home-modules -Wpartial-fields -Wredundant-constraints -threaded -rtsopts -with-rtsopts=-N
   build-depends:
@@ -88,6 +93,7 @@ test-suite PracticalWeb-test
     , classy-prelude
     , hspec
     , lens
+    , mtl
     , pcre-heavy
     , pcre-light
     , safe

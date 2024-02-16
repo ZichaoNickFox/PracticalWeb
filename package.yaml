@@ -28,6 +28,7 @@ dependencies:
 - hspec
 - safe
 - pcre-light
+- mtl
 
 ghc-options:
 - -Wall
@@ -40,6 +41,10 @@ ghc-options:
 - -Wpartial-fields
 - -Wredundant-constraints
 
+default-extensions:
+- OverloadedStrings
+- QuasiQuotes
+
 library:
   source-dirs: src
 
@@ -51,10 +56,6 @@ executables:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
-    default-extensions:
-    - OverloadedStrings
-    - DuplicateRecordFields
-    - QuasiQuotes
 
 tests:
   PracticalWeb-test:
@@ -64,7 +65,5 @@ tests:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
-    default-extensions:
-    - QuasiQuotes
     dependencies:
     - PracticalWeb   

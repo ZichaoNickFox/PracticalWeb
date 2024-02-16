@@ -1,12 +1,17 @@
-module Domain.Validation where
+module Domain.Validation (
+  validate,
+  rangeBetween,
+  lengthBetween,
+  regexMatches) where
 
-import Prelude
+import Prelude hiding (length)
 import ClassyPrelude hiding (length)
+import Data.Text
 import Text.Regex.PCRE.Heavy
 import Control.Lens
 
 -- https://edu.anarcho-copy.org/Programming%20Languages/Haskell/Practical%20Web%20Development%20with%20Haskell.pdf
--- p58
+-- ebook p58
 
 type Validation e a = a -> Maybe e
 
@@ -20,7 +25,7 @@ rangeBetween :: (Ord a) => a -> a -> e -> Validation e a
 rangeBetween min max err val =
   if val >= min && val <= max then Nothing else Just err
 
-lengthBetween :: (Foldable t) => Int -> Int -> e -> Validation e (t a)
+lengthBetween :: Int -> Int -> e -> Validation e Text
 lengthBetween min max err val = rangeBetween min max err (length val)
 
 regexMatches :: Regex -> e -> Validation e Text
