@@ -11,8 +11,12 @@ let
     p.pcre-heavy
     p.pcre-light
     p.safe
-    p.classy-prelude
     p.mtl
+    p.containers
+    p.data-default
+    p.data-has
+    p.string-random
+    p.transformers
   ]);
 in
 pkgs.mkShell {

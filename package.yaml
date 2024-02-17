@@ -22,13 +22,17 @@ description:         Please see the README on GitHub at <https://github.com/gith
 dependencies:
 - base >= 4.7 && < 5
 - text
-- classy-prelude
 - pcre-heavy 
 - lens
 - hspec
 - safe
 - pcre-light
 - mtl
+- containers
+- data-default
+- data-has
+- string-random
+- transformers
 
 ghc-options:
 - -Wall
@@ -44,6 +48,10 @@ ghc-options:
 default-extensions:
 - OverloadedStrings
 - QuasiQuotes
+- ConstraintKinds
+- FlexibleContexts
+- ScopedTypeVariables
+- GeneralisedNewtypeDeriving
 
 library:
   source-dirs: src
@@ -56,6 +64,8 @@ executables:
     - -threaded
     - -rtsopts
     - -with-rtsopts=-N
+    dependencies:
+    - PracticalWeb   
 
 tests:
   PracticalWeb-test:

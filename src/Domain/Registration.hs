@@ -2,19 +2,19 @@ module Domain.Registration where
 
 -- ebook p55
 
-import Prelude hiding (length)
-import Data.Text
-import Domain.Validation
-import Text.Regex.PCRE.Heavy
-import Control.Monad.Except
-import Control.Monad.IO.Class
+import           Control.Monad.Except
+import           Control.Monad.Trans.Class (lift)
+import           Data.Text
+import           Domain.Validation
+import           Prelude                   hiding (length)
+import           Text.Regex.PCRE.Heavy
 
 data Auth = Auth {
-  authEmail :: Email,
+  authEmail    :: Email,
   authPassword :: Password
 } deriving (Show, Eq)
 
-newtype Email = Email { rawEmail :: Text } deriving (Show, Eq)
+newtype Email = Email { rawEmail :: Text } deriving (Show, Eq, Ord)
 mkEmail :: Text -> Either [EmailValidationErr] Email
 mkEmail = validate Email
   [ regexMatches
@@ -26,9 +26,9 @@ newtype Password = Password { rawPassword :: Text } deriving (Show, Eq)
 mkPassword :: Text -> Either [PasswordValidationErr] Password
 mkPassword rawPassword = validate Password
   [ lengthBetween 5 50 (PasswordValidationErrLength (length rawPassword))
-  , regexMatches [re|\d|] PasswordValidationErrMustContainNumber 
-  , regexMatches [re|[A-Z]|] PasswordValidationErrMustContainUpperCase 
-  , regexMatches [re|[a-z]|] PasswordValidationErrMustContainLowerCase 
+  , regexMatches [re|\d|] PasswordValidationErrMustContainNumber
+  , regexMatches [re|[A-Z]|] PasswordValidationErrMustContainUpperCase
+  , regexMatches [re|[a-z]|] PasswordValidationErrMustContainLowerCase
   ] rawPassword
 
 data EmailValidationErr = EmailValidationErrInvalidEmail
@@ -36,14 +36,14 @@ data PasswordValidationErr =
   PasswordValidationErrLength Int |
   PasswordValidationErrMustContainUpperCase |
   PasswordValidationErrMustContainLowerCase |
-  PasswordValidationErrMustContainNumber 
+  PasswordValidationErrMustContainNumber
 data EmailVerificationErr = EmailVerificationErrInvalidCode
 
 data RegistrationError = RegistrationErrorEmailToken deriving (Show, Eq)
 
 type VerificationCode = Text
 
-newtype UserId = UserId Int
+newtype UserId = UserId Int deriving (Show, Eq)
 
 class Monad m => AuthRepo m where
   addAuth :: Auth -> m (Either RegistrationError VerificationCode)
@@ -54,6 +54,7 @@ class Monad m => AuthRepo m where
 class Monad m => EmailVerificationNotify m where
   notifyEmailVerification :: Email -> VerificationCode -> m ()
 
+{-
 instance AuthRepo IO where
   addAuth (Auth email password) = do
     print $ "adding auth : " <> rawEmail email
@@ -61,12 +62,13 @@ instance AuthRepo IO where
 
 instance EmailVerificationNotify IO where
   notifyEmailVerification email vCode =
-    print $ "notiy : " <> rawEmail email <> " - " <> vCode
+    print $ "notify : " <> rawEmail email <> " - " <> vCode
+-}
 
-register :: (AuthRepo m, EmailVerificationNotify m, Control.Monad.IO.Class.MonadIO m) => Auth -> m (Either RegistrationError ())
+register :: (AuthRepo m, EmailVerificationNotify m) => Auth -> m (Either RegistrationError ())
 register auth = runExceptT $ do
   vCode <- ExceptT $ addAuth auth
-  liftIO $ notifyEmailVerification (authEmail auth) vCode
+  lift $ notifyEmailVerification (authEmail auth) vCode
 
 verifyEmail :: AuthRepo m => VerificationCode -> m (Either EmailVerificationErr ())
 verifyEmail = setEmailAsVerified

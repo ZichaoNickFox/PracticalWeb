@@ -1,17 +1,18 @@
 module Main where
 
-import Test.Hspec
-import Domain.Validation
-import           Safe
+import           Data.Text
+import           Debug.Trace           (traceShow)
+import           Domain.Registration
+import           Domain.Validation
+import           Test.Hspec
 import           Text.Regex.PCRE.Heavy
-import           Text.Regex.PCRE.Light
-import Data.Text
-import Domain.Registration
+
+shouldBeWhat :: (Show a) =>  a -> () -> IO ()
+shouldBeWhat a () = traceShow a (return ())
 
 -- ebook p59
-
-validationSpec :: SpecWith ()
-validationSpec = do
+domainSpec :: SpecWith ()
+domainSpec = do
   it "lengthBetween" $ lengthBetween 1 5 "err" "12345" `shouldBe` Nothing
   it "lengthBetween" $ lengthBetween 1 5 "err" "123456" `shouldBe` Just "err"
   it "checking" $ ("https://val.packett.cool" :: Text) =~ [re|^http.*|] `shouldBe` True
@@ -21,9 +22,6 @@ validationSpec = do
   let containsB = regexMatches [re|B|] "errB"
   it "validate" $ validate id [containsA, containsB] "abc" `shouldBe` Left ["errA", "errB"]
   it "validate" $ validate id [containsA, containsB] "ABc" `shouldBe` Right "ABc"
-
-registrationSpec :: SpecWith ()
-registrationSpec = do
   it "register" $ do
     let Right email = mkEmail "test@example.com"
     let Right password = mkPassword "123456"
@@ -31,10 +29,19 @@ registrationSpec = do
     r <- register auth
     r `shouldBe` Right ()
 
+-- ebook 81
+-- adapterInMemorySpec :: SpecWith ()
+-- adapterInMemorySpec = do
+--   let Right email = mkEmail "example@test.com"
+--   let Right password = mkPassword "123456ABCDefgh"
+--   let auth = Auth email password
+--   it "addAuth" $ do
+--     A.addAuth auth `shouldBeWhat` ()
+
 spec :: SpecWith ()
 spec = do
-  describe "validationSpec" validationSpec
-  describe "registrationSpec" registrationSpec
+  describe "domainSpec" domainSpec
+  -- describe "adapterInMemorySpec" adapterInMemorySpec
 
 main :: IO ()
 main = hspec spec

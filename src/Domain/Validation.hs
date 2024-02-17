@@ -5,8 +5,8 @@ module Domain.Validation (
   regexMatches) where
 
 import Prelude hiding (length)
-import ClassyPrelude hiding (length)
 import Data.Text
+import Data.Maybe
 import Text.Regex.PCRE.Heavy
 import Control.Lens
 
