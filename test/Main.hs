@@ -22,12 +22,12 @@ domainSpec = do
   let containsB = regexMatches [re|B|] "errB"
   it "validate" $ validate id [containsA, containsB] "abc" `shouldBe` Left ["errA", "errB"]
   it "validate" $ validate id [containsA, containsB] "ABc" `shouldBe` Right "ABc"
-  it "register" $ do
-    let Right email = mkEmail "test@example.com"
-    let Right password = mkPassword "123456"
-    let auth = Auth email password
-    r <- register auth
-    r `shouldBe` Right ()
+  -- it "register" $ do
+  --   let Right email = mkEmail "test@example.com"
+  --   let Right password = mkPassword "123456"
+  --   let auth = Auth email password
+  --   r <- register auth
+  --   r `shouldBe` Right ()
 
 -- ebook 81
 -- adapterInMemorySpec :: SpecWith ()

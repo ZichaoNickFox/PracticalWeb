@@ -17,6 +17,7 @@ let
     p.data-has
     p.string-random
     p.transformers
+    p.katip
   ]);
 in
 pkgs.mkShell {

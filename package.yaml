@@ -33,6 +33,7 @@ dependencies:
 - data-has
 - string-random
 - transformers
+- katip
 
 ghc-options:
 - -Wall
@@ -52,6 +53,7 @@ default-extensions:
 - FlexibleContexts
 - ScopedTypeVariables
 - GeneralisedNewtypeDeriving
+- TemplateHaskell
 
 library:
   source-dirs: src
