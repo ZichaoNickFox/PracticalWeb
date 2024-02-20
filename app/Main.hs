@@ -1,15 +1,19 @@
 module Main (main) where
 
 import qualified Adapter.InMemory.Auth as M
+import           Control.Exception
 import           Control.Monad.Reader
 import           Data.Default
 import           Domain.Login
 import           Domain.Registration
 import           GHC.Conc
+import           Katip
+import           System.IO
 
 newtype App a = App
-  { unApp :: ReaderT (TVar M.State) IO a
-  } deriving (Applicative, Functor, Monad, MonadReader (TVar M.State), MonadIO, MonadFail)
+  { unApp :: ReaderT (TVar M.State) (KatipContextT IO) a
+  } deriving (Applicative, Functor, Monad, MonadReader (TVar M.State), MonadIO,
+              KatipContext, Katip, MonadFail)
 
 instance AuthRepo App where
   addAuth = M.addAuth
@@ -24,8 +28,10 @@ instance SessionRepo App where
   newSession = M.newSession
   findUserIdBySessionId = M.findUserIdBySessionId
 
-run :: TVar M.State -> App a -> IO a
-run state = flip runReaderT state . unApp
+run :: LogEnv -> TVar M.State -> App a -> IO a
+run le state = runKatipContextT le () mempty
+  . flip runReaderT state
+  . unApp
 
 action :: App ()
 action = do
@@ -40,7 +46,16 @@ action = do
   Just registeredEmail <- getUser userId
   liftIO $ print (session, userId, registeredEmail)
 
+withKatip :: (LogEnv -> IO a) -> IO a
+withKatip = bracket createLogEnv closeScribes
+  where
+    createLogEnv = do
+      logEnv <- initLogEnv "HAuth" "prod"
+      stdoutScribe <- mkHandleScribe ColorIfTerminal stdout (permitItem InfoS) V2
+      registerScribe "stdout" stdoutScribe defaultScribeSettings logEnv
+
 main :: IO ()
 main = do
-  state <- newTVarIO (def :: M.State)
-  run state action
+  withKatip $ \le -> do
+    state <- newTVarIO (def :: M.State)
+    run le state action

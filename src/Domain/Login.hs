@@ -5,6 +5,7 @@ import           Control.Monad.IO.Class
 import           Control.Monad.Trans.Class (lift)
 import           Data.Text
 import           Domain.Registration
+import           Katip
 
 type SessionId = Text
 
@@ -20,13 +21,16 @@ class (Monad m, Control.Monad.IO.Class.MonadIO m) => SessionRepo m where
 instance SessionRepo IO
 -}
 
-login :: (AuthRepo m, SessionRepo m) => Auth -> m (Either LoginError SessionId)
+login :: (KatipContext m, AuthRepo m, SessionRepo m) => Auth -> m (Either LoginError SessionId)
 login auth = runExceptT $ do
   result <- lift $ findUserByAuth auth
   case result of
     Nothing          -> throwError LoginErrorInvalidAuth
     Just (_, False)  -> throwError LoginErrorEmailNotVerified
-    Just (userId, _) -> lift $ newSession userId
+    Just (userId, _) -> withUserIdContext userId . lift $ do
+      sessionId <- newSession userId
+      $(logTM) InfoS $ ls (rawEmail $ authEmail auth) <> " logged in successfully"
+      return sessionId
 
 resolveSessionId :: SessionRepo m => SessionId -> m (Maybe UserId)
 resolveSessionId = findUserIdBySessionId

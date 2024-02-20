@@ -36,7 +36,7 @@ instance Default State where
 
 type ImMemory r m = (Has (TVar State) r, MonadReader r m, MonadIO m)
 
-addAuth :: ImMemory r m => Auth -> m (Either RegistrationError VerificationCode)
+addAuth :: ImMemory r m => Auth -> m (Either RegistrationError (UserId, VerificationCode))
 addAuth auth = do
   tvar <- asks getter
   vCode <- liftIO $ stringRandomIO "[A-Za-z0-9]{16}"
@@ -58,26 +58,28 @@ addAuth auth = do
           , stateUnverifiedEmails = newUnverifieds
           }
     lift $ writeTVar tvar newState
-    return vCode
+    return (UserId newUserId, vCode)
 
-setEmailAsVerified :: ImMemory r m => VerificationCode -> m (Either EmailVerificationErr ())
+setEmailAsVerified :: ImMemory r m => VerificationCode -> m (Either EmailVerificationErr (UserId, Email))
 setEmailAsVerified vCode = do
   tvar <- asks getter
   liftIO $ atomically . runExceptT $ do
     state <- lift $ readTVar tvar
     let unverifieds = stateUnverifiedEmails state
-        verifieds = stateVerifiedEmails state
         mayEmail = lookup vCode unverifieds
-    case mayEmail of
-      Nothing -> throwError EmailVerificationErrInvalidCode
-      Just email -> do
-        let newUnverifieds = Data.Map.delete vCode unverifieds
-            newVerifieds = Data.Set.insert email verifieds
-            newState = state
-              { stateUnverifiedEmails = newUnverifieds
-              , stateVerifiedEmails = newVerifieds
-              }
-        lift $ writeTVar tvar newState
+    email <- mayEmail `orThrow` EmailVerificationErrInvalidCode
+    let auths = stateAuths state
+        mayUserId = fmap fst . find ((email==) . authEmail . snd) $ auths
+    userId <- mayUserId `orThrow` EmailVerificationErrInvalidCode
+    let verifieds = stateVerifiedEmails state
+        newVerifieds = Data.Set.insert email verifieds
+        newUnverifieds = Data.Map.delete vCode unverifieds
+        newState = state
+          { stateUnverifiedEmails = newUnverifieds
+          , stateVerifiedEmails = newVerifieds
+          }
+    lift $ writeTVar tvar newState
+    return (userId, email)
 
 findUserByAuth :: ImMemory r m => Auth -> m (Maybe (UserId, Bool))
 findUserByAuth auth = do
@@ -131,3 +133,7 @@ findUserIdBySessionId :: ImMemory r m => SessionId -> m (Maybe UserId)
 findUserIdBySessionId sessionId = do
   tvar <- asks getter
   liftIO $ lookup sessionId . stateSessions <$> readTVarIO tvar
+
+orThrow :: MonadError e m => Maybe a -> e -> m a
+orThrow Nothing e  = throwError e
+orThrow (Just a) _ = return a

@@ -6,6 +6,7 @@ import           Control.Monad.Except
 import           Control.Monad.Trans.Class (lift)
 import           Data.Text
 import           Domain.Validation
+import           Katip
 import           Prelude                   hiding (length)
 import           Text.Regex.PCRE.Heavy
 
@@ -46,8 +47,8 @@ type VerificationCode = Text
 newtype UserId = UserId Int deriving (Show, Eq)
 
 class Monad m => AuthRepo m where
-  addAuth :: Auth -> m (Either RegistrationError VerificationCode)
-  setEmailAsVerified :: VerificationCode -> m (Either EmailVerificationErr ())
+  addAuth :: Auth -> m (Either RegistrationError (UserId, VerificationCode))
+  setEmailAsVerified :: VerificationCode -> m (Either EmailVerificationErr (UserId, Email))
   findUserByAuth :: Auth -> m (Maybe (UserId, Bool))
   findEmailFromUserId :: UserId -> m (Maybe Email)
 
@@ -65,10 +66,20 @@ instance EmailVerificationNotify IO where
     print $ "notify : " <> rawEmail email <> " - " <> vCode
 -}
 
-register :: (AuthRepo m, EmailVerificationNotify m) => Auth -> m (Either RegistrationError ())
-register auth = runExceptT $ do
-  vCode <- ExceptT $ addAuth auth
-  lift $ notifyEmailVerification (authEmail auth) vCode
+withUserIdContext :: (KatipContext m) => UserId -> m a -> m a
+withUserIdContext (UserId userId) = katipAddContext (sl "userId" userId)
 
-verifyEmail :: AuthRepo m => VerificationCode -> m (Either EmailVerificationErr ())
-verifyEmail = setEmailAsVerified
+register :: (KatipContext m, AuthRepo m, EmailVerificationNotify m) => Auth -> m (Either RegistrationError ())
+register auth = runExceptT $ do
+  (userId, vCode) <- ExceptT $ addAuth auth
+  let email = authEmail auth
+  lift $ notifyEmailVerification email vCode
+  withUserIdContext userId $
+    $(logTM) InfoS $ ls (rawEmail email) <> " is registered successfully"
+
+verifyEmail :: (KatipContext m, AuthRepo m) => VerificationCode -> m (Either EmailVerificationErr ())
+verifyEmail vCode = runExceptT $ do
+  (userId, email) <- ExceptT $ setEmailAsVerified vCode
+  withUserIdContext userId $
+    $(logTM) InfoS $ ls (rawEmail email) <> " is verified successfully"
+  return ()
